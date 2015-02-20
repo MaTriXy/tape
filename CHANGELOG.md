@@ -1,6 +1,47 @@
 Change Log
 ==========
 
+Version 1.3.0 *(In Development)*
+--------------------------------
+
+ * New: `remove(int)` allows atomic removal of multiple elements.
+ * New: `forEach(ElementVisitor)` allows iterating queue items and stopping iteration early.
+ * `QueueFile` now implements the `Closeable` interface.
+ * Fix: Do not erase data before updating the header when calling `clear()` or `remove()`.
+
+
+Version 1.2.3 *(2014-10-07)*
+----------------------------
+
+ * `close()` method on `FileObjectQueue` now closes underlying `QueueFile`.
+ * Fix: Properly move and zero out bytes during copy opertaions.
+
+
+Version 1.2.2 *(2014-03-18)*
+----------------------------
+
+ * Fix: Prevent corruption when expanding a perfectly saturated queue.
+
+
+Version 1.2.1 *(2014-03-06)*
+----------------------------
+
+ * New: `QueueFile` instances throw an `IOException` on creation if a corrupt header is found.
+
+
+Version 1.2.0 *(2014-01-16)*
+----------------------------
+
+ * New: Zero out old records in `clear()` and `remove()`.
+
+
+Version 1.1.1 *(2013-10-21)*
+----------------------------
+
+ * Fix: Ensure -1 is returned when no more bytes are available.
+ * Fix: Correct read to use position offset in certain cases where it would otherwise use 0.
+
+
 Version 1.1.0 *(2012-11-08)*
 ----------------------------
 
