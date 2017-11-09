@@ -4,11 +4,13 @@ package com.squareup.tape2;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import javax.annotation.Nullable;
 
 final class InMemoryObjectQueue<T> extends ObjectQueue<T> {
   private final Deque<T> entries;
@@ -24,7 +26,7 @@ final class InMemoryObjectQueue<T> extends ObjectQueue<T> {
     entries = new ArrayDeque<>();
   }
 
-  @Override public QueueFile file() {
+  @Override public @Nullable QueueFile file() {
     return null;
   }
 
@@ -34,13 +36,13 @@ final class InMemoryObjectQueue<T> extends ObjectQueue<T> {
     entries.addLast(entry);
   }
 
-  @Override public T peek() throws IOException {
+  @Override public @Nullable T peek() throws IOException {
     if (closed) throw new IOException("closed");
     return entries.peekFirst();
   }
 
   @Override public List<T> asList() throws IOException {
-    return new ArrayList<>(entries);
+    return Collections.unmodifiableList(new ArrayList<>(entries));
   }
 
   @Override public int size() {
@@ -67,6 +69,12 @@ final class InMemoryObjectQueue<T> extends ObjectQueue<T> {
 
   @Override public void close() throws IOException {
     closed = true;
+  }
+
+  @Override public String toString() {
+    return "InMemoryObjectQueue{"
+        + "size=" + entries.size()
+        + '}';
   }
 
   private final class EntryIterator implements Iterator<T> {

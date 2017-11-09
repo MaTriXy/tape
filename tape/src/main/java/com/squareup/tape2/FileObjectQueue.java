@@ -4,6 +4,8 @@ package com.squareup.tape2;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Iterator;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 final class FileObjectQueue<T> extends ObjectQueue<T> {
   /** Backing storage implementation. */
@@ -17,7 +19,7 @@ final class FileObjectQueue<T> extends ObjectQueue<T> {
     this.converter = converter;
   }
 
-  @Override public QueueFile file() {
+  @Override public @Nonnull QueueFile file() {
     return queueFile;
   }
 
@@ -35,7 +37,7 @@ final class FileObjectQueue<T> extends ObjectQueue<T> {
     queueFile.add(bytes.getArray(), 0, bytes.size());
   }
 
-  @Override public T peek() throws IOException {
+  @Override public @Nullable T peek() throws IOException {
     byte[] bytes = queueFile.peek();
     if (bytes == null) return null;
     return converter.from(bytes);
@@ -70,6 +72,12 @@ final class FileObjectQueue<T> extends ObjectQueue<T> {
     return new QueueFileIterator(queueFile.iterator());
   }
 
+  @Override public String toString() {
+    return "FileObjectQueue{"
+        + "queueFile=" + queueFile
+        + '}';
+  }
+
   private final class QueueFileIterator implements Iterator<T> {
     final Iterator<byte[]> iterator;
 
@@ -96,16 +104,15 @@ final class FileObjectQueue<T> extends ObjectQueue<T> {
   }
 
   /** Enables direct access to the internal array. Avoids unnecessary copying. */
-  private static class DirectByteArrayOutputStream extends ByteArrayOutputStream {
-    public DirectByteArrayOutputStream() {
-      super();
+  private static final class DirectByteArrayOutputStream extends ByteArrayOutputStream {
+    DirectByteArrayOutputStream() {
     }
 
     /**
      * Gets a reference to the internal byte array.  The {@link #size()} method indicates how many
      * bytes contain actual data added since the last {@link #reset()} call.
      */
-    public byte[] getArray() {
+    byte[] getArray() {
       return buf;
     }
   }

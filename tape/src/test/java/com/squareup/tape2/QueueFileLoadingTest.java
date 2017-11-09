@@ -1,25 +1,26 @@
 // Copyright 2012 Square, Inc.
 package com.squareup.tape2;
 
-import org.junit.After;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import org.junit.After;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 import static com.squareup.tape2.QueueTestUtils.EMPTY_SERIALIZED_QUEUE;
 import static com.squareup.tape2.QueueTestUtils.FRESH_SERIALIZED_QUEUE;
 import static com.squareup.tape2.QueueTestUtils.ONE_ENTRY_SERIALIZED_QUEUE;
 import static com.squareup.tape2.QueueTestUtils.TRUNCATED_EMPTY_SERIALIZED_QUEUE;
 import static com.squareup.tape2.QueueTestUtils.TRUNCATED_ONE_ENTRY_SERIALIZED_QUEUE;
-import static com.squareup.tape2.QueueTestUtils.UndeletableFile;
 import static com.squareup.tape2.QueueTestUtils.copyTestFile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class QueueFileLoadingTest {
+@RunWith(JUnit4.class)
+public final class QueueFileLoadingTest {
 
   private File testFile;
 
@@ -61,29 +62,29 @@ public class QueueFileLoadingTest {
   }
 
   @Test(expected = IOException.class)
-  public void testCreateWithReadOnlyFile_throwsException() throws Exception {
+  public void testCreateWithReadOnlyFileThrowsException() throws Exception {
     testFile = copyTestFile(TRUNCATED_ONE_ENTRY_SERIALIZED_QUEUE);
     assertTrue(testFile.setWritable(false));
 
-    File tmp = new UndeletableFile(testFile.getAbsolutePath());
     // Should throw an exception.
     new QueueFile.Builder(testFile).build();
   }
 
   @Test(expected = IOException.class)
-  public void testAddWithReadOnlyFile_missesMonitor() throws Exception {
+  public void testAddWithReadOnlyFileMissesMonitor() throws Exception {
     testFile = copyTestFile(EMPTY_SERIALIZED_QUEUE);
 
     QueueFile qf = new QueueFile.Builder(testFile).build();
 
     // Should throw an exception.
     FileObjectQueue<String> queue =
-        new FileObjectQueue<String>(qf, new FileObjectQueue.Converter<String>() {
+        new FileObjectQueue<>(qf, new FileObjectQueue.Converter<String>() {
           @Override public String from(byte[] bytes) throws IOException {
             return null;
           }
 
-          @Override public void toStream(String o, OutputStream bytes) throws IOException {
+          @Override public void toStream(String o, OutputStream bytes)
+              throws IOException {
             throw new IOException("fake Permission denied");
           }
         });

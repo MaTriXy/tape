@@ -24,6 +24,7 @@ import java.nio.channels.FileChannel;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import javax.annotation.Nullable;
 
 import static java.lang.Math.min;
 
@@ -100,10 +101,10 @@ public final class QueueFile implements Closeable, Iterable<byte[]> {
   final File file;
 
   /** True when using the versioned header format. Otherwise use the legacy format. */
-  boolean versioned;
+  final boolean versioned;
 
   /** The header length in bytes: 16 or 32. */
-  int headerLength;
+  final int headerLength;
 
   /** Cached file length. Always a power of 2. */
   long fileLength;
@@ -132,7 +133,7 @@ public final class QueueFile implements Closeable, Iterable<byte[]> {
 
   @Private boolean closed;
 
-  private static RandomAccessFile initializeFromFile(File file, boolean forceLegacy)
+  @Private static RandomAccessFile initializeFromFile(File file, boolean forceLegacy)
       throws IOException {
     if (!file.exists()) {
       // Use a temp file so we don't leave a partially-initialized file.
@@ -487,7 +488,7 @@ public final class QueueFile implements Closeable, Iterable<byte[]> {
   }
 
   /** Reads the eldest element. Returns null if the queue is empty. */
-  public byte[] peek() throws IOException {
+  public @Nullable byte[] peek() throws IOException {
     if (closed) throw new IOException("closed");
     if (isEmpty()) return null;
     int length = first.length;
@@ -674,12 +675,15 @@ public final class QueueFile implements Closeable, Iterable<byte[]> {
   }
 
   @Override public String toString() {
-    return getClass().getSimpleName()
-        + "[length=" + fileLength
+    return "QueueFile{"
+        + "file=" + file
+        + ", zero=" + zero
+        + ", versioned=" + versioned
+        + ", length=" + fileLength
         + ", size=" + elementCount
         + ", first=" + first
         + ", last=" + last
-        + "]";
+        + '}';
   }
 
   /** A pointer to an element. */
