@@ -378,7 +378,7 @@ public final class QueueFile implements Closeable, Iterable<byte[]> {
     if ((offset | count) < 0 || count > data.length - offset) {
       throw new IndexOutOfBoundsException();
     }
-    if (closed) throw new IOException("closed");
+    if (closed) throw new IllegalStateException("closed");
 
     expandIfNecessary(count);
 
@@ -489,7 +489,7 @@ public final class QueueFile implements Closeable, Iterable<byte[]> {
 
   /** Reads the eldest element. Returns null if the queue is empty. */
   public @Nullable byte[] peek() throws IOException {
-    if (closed) throw new IOException("closed");
+    if (closed) throw new IllegalStateException("closed");
     if (isEmpty()) return null;
     int length = first.length;
     byte[] data = new byte[length];
@@ -504,7 +504,7 @@ public final class QueueFile implements Closeable, Iterable<byte[]> {
    * elements from the head of the QueueFile is permitted during iteration using
    * {@link Iterator#remove()}.
    *
-   * <p>The iterator may throw an unchecked {@link RuntimeException} during {@link Iterator#next()}
+   * <p>The iterator may throw an unchecked {@link IOException} during {@link Iterator#next()}
    * or {@link Iterator#remove()}.
    */
   @Override public Iterator<byte[]> iterator() {
@@ -558,7 +558,7 @@ public final class QueueFile implements Closeable, Iterable<byte[]> {
         // Return the read element.
         return buffer;
       } catch (IOException e) {
-        throw new RuntimeException("todo: throw a proper error", e);
+        throw QueueFile.<Error>getSneakyThrowable(e);
       }
     }
 
@@ -573,7 +573,7 @@ public final class QueueFile implements Closeable, Iterable<byte[]> {
       try {
         QueueFile.this.remove();
       } catch (IOException e) {
-        throw new RuntimeException("todo: throw a proper error", e);
+        throw QueueFile.<Error>getSneakyThrowable(e);
       }
 
       expectedModCount = modCount;
@@ -645,7 +645,7 @@ public final class QueueFile implements Closeable, Iterable<byte[]> {
 
   /** Clears this queue. Truncates the file to the initial size. */
   public void clear() throws IOException {
-    if (closed) throw new IOException("closed");
+    if (closed) throw new IllegalStateException("closed");
 
     // Commit the header.
     writeHeader(INITIAL_LENGTH, 0, 0, 0);
@@ -750,7 +750,24 @@ public final class QueueFile implements Closeable, Iterable<byte[]> {
      */
     public QueueFile build() throws IOException {
       RandomAccessFile raf = initializeFromFile(file, forceLegacy);
-      return new QueueFile(file, raf, zero, forceLegacy);
+      QueueFile qf = null;
+      try {
+        qf = new QueueFile(file, raf, zero, forceLegacy);
+        return qf;
+      } finally {
+        if (qf == null) {
+          raf.close();
+        }
+      }
     }
+  }
+
+  /**
+   * Use this to throw checked exceptions from iterator methods that do not declare that they throw
+   * checked exceptions.
+   */
+  @SuppressWarnings({"unchecked", "TypeParameterUnusedInFormals"})
+  static <T extends Throwable> T getSneakyThrowable(Throwable t) throws T {
+    throw (T) t;
   }
 }
